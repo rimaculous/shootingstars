@@ -13,27 +13,34 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const wishesRef = collection(db, "wishes");
+const isQueen = new URLSearchParams(window.location.search).get('mode') === 'queen';
 
-// --- 1. GENERATE SCINTILLATING STARS ---
+// --- 1. SKY GENERATION ---
 const sky = document.getElementById("sky");
-for (let i = 0; i < 200; i++) {
-    const s = document.createElement('div');
-    s.className = 'twinkle-star';
-    s.style.left = Math.random() * 100 + "vw";
-    s.style.top = Math.random() * 100 + "vh";
-    s.style.animationDelay = Math.random() * 5 + "s";
-    sky.appendChild(s);
+function createBg() {
+    for (let i = 0; i < 180; i++) {
+        const s = document.createElement('div');
+        s.className = 'twinkle-star';
+        s.style.left = Math.random() * 100 + "vw";
+        s.style.top = Math.random() * 100 + "vh";
+        s.style.animationDelay = Math.random() * 5 + "s";
+        sky.appendChild(s);
+    }
 }
+createBg();
 
-// --- 2. MODAL & DRAWING ---
+// --- 2. MODALS & DRAWING ---
 const modal = document.getElementById('wish-modal');
+const viewModal = document.getElementById('view-modal');
 const canvas = document.getElementById("drawCanvas");
 const ctx = canvas.getContext("2d");
 let drawing = false;
 let currentColor = 'white';
 
-window.ouvrirMenu = () => modal.classList.replace('modal-hidden', 'modal-show');
-window.closeModal = () => modal.classList.replace('modal-show', 'modal-hidden');
+window.ouvrirMenu = () => modal.className = 'modal-show';
+window.closeModal = () => modal.className = 'modal-hidden';
+window.closeView = () => viewModal.className = 'view-modal-hidden';
+
 window.openStep = (n) => {
     document.querySelectorAll('.step').forEach((s, i) => s.style.display = (i+1 === n) ? 'block' : 'none');
     if(n === 3) document.getElementById('star-to-launch').src = canvas.toDataURL();
@@ -55,7 +62,7 @@ canvas.onmousemove = (e) => {
 };
 window.onmouseup = () => drawing = false;
 
-// --- 3. PULL DOWN TO LAUNCH (Photo 8) ---
+// --- 3. PULL DOWN TO LAUNCH ---
 const starImg = document.getElementById('star-to-launch');
 let startY = 0;
 let isPulling = false;
@@ -66,14 +73,14 @@ window.onmousemove = (e) => {
     let diff = e.clientY - startY;
     if(diff > 0) {
         starImg.style.transform = `translateY(${diff}px)`;
-        if(diff > 150) { launchStar(); isPulling = false; }
+        if(diff > 140) { launchStar(); isPulling = false; }
     }
 };
 window.onmouseup = () => { isPulling = false; starImg.style.transition = "0.3s"; starImg.style.transform = "translateY(0)"; };
 
 async function launchStar() {
     const data = {
-        nom: document.getElementById('star-name').value || "Anonymous",
+        nom: document.getElementById('star-name').value || "Someone",
         voeu: document.getElementById('star-wish').value,
         contact: `${document.getElementById('contact-type').value}: ${document.getElementById('user-contact').value}`,
         image: canvas.toDataURL(),
@@ -84,17 +91,27 @@ async function launchStar() {
     location.reload();
 }
 
-// --- 4. DISPLAY GALAXY (Queen Mode Support) ---
-const isQueen = new URLSearchParams(window.location.search).get('mode') === 'queen';
+// --- 4. DISPLAY GALAXY & POPUP ---
 onSnapshot(query(wishesRef, orderBy("date", "desc")), (snap) => {
+    sky.innerHTML = "";
+    createBg();
     snap.forEach(doc => {
         const d = doc.data();
         const s = document.createElement('div');
         s.className = 'galaxy-star';
         s.style.left = Math.random() * 90 + "vw";
         s.style.top = Math.random() * 80 + "vh";
-        const info = isQueen ? `Wish: ${d.voeu}\\nFrom: ${d.nom}\\nContact: ${d.contact}` : `Wish: ${d.voeu}`;
-        s.innerHTML = `<img src="${d.image}" onclick="alert('${info}')">`;
+        
+        const img = document.createElement('img');
+        img.src = d.image;
+        img.onclick = () => {
+            document.getElementById('view-img').src = d.image;
+            document.getElementById('view-wish').innerText = d.voeu;
+            document.getElementById('view-name').innerText = isQueen ? `${d.nom} (${d.contact})` : d.nom;
+            document.getElementById('view-date').innerText = new Date(d.date).toLocaleDateString();
+            viewModal.className = 'view-show';
+        };
+        s.appendChild(img);
         sky.appendChild(s);
     });
 });
