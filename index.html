@@ -1,41 +1,66 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wishing-Star | Galaxy</title>
+    <title>Wishing Star Galaxy</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="sky"></div> <button id="open-btn" onclick="ouvrirMenu()">+</button>
+    <div id="sky"></div>
+
+    <div id="admin-crown" style="display:none; position:fixed; top:20px; left:20px; font-size:24px; z-index:1001;">👑</div>
+
+    <button id="open-btn" onclick="openWishStep(1)">+</button>
 
     <div id="wish-modal" class="modal-hidden">
         <div class="modal-content">
-            
-            <div id="step-draw">
+            <button class="close-modal" onclick="closeModal()">×</button>
+
+            <div id="step-1" class="step">
                 <h1>Draw Your Star</h1>
                 <div class="drawing-area">
                     <canvas id="drawCanvas" width="300" height="250"></canvas>
                 </div>
-                <button class="next-btn" onclick="allerAuxInfos()">Continuer</button>
+                <div class="toolbar">
+                    <div class="colors">
+                        <div class="color-dot active" style="background:white" onclick="setColor('white', this)"></div>
+                        <div class="color-dot" style="background:#add8e6" onclick="setColor('#add8e6', this)"></div>
+                        <div class="color-dot" style="background:#ffb6c1" onclick="setColor('#ffb6c1', this)"></div>
+                        <div class="color-dot" style="background:#fafad2" onclick="setColor('#fafad2', this)"></div>
+                    </div>
+                    <button class="action-btn" onclick="clearCanvas()">Undo</button>
+                    <button class="next-btn" onclick="openWishStep(2)">Continue ></button>
+                </div>
             </div>
 
-            <div id="step-info" style="display:none;">
+            <div id="step-2" class="step" style="display:none;">
                 <h1>Star Details</h1>
                 <div class="input-group">
-                    <input type="text" id="star-name" placeholder="Nom de l'étoile">
-                    <div class="contact-row" style="display: flex; gap: 5px;">
-                        <select id="contact-type" style="width: 30%;">
+                    <input type="text" id="star-name" placeholder="Star Name (Nickname)" required>
+                    <div class="contact-row">
+                        <select id="contact-type">
                             <option value="Insta">Insta</option>
                             <option value="TikTok">TikTok</option>
                             <option value="Wtsp">Wtsp</option>
                         </select>
-                        <input type="text" id="user-contact" placeholder="@toncompte" style="width: 70%;">
+                        <input type="text" id="user-contact" placeholder="@youraccount">
                     </div>
-                    <textarea id="star-wish" placeholder="Confie ton vœu..."></textarea>
+                    <textarea id="star-wish" placeholder="Confide your wish to the star..."></textarea>
                 </div>
-                <p class="instruction">Tire cette fenêtre vers le bas pour lancer l'étoile ! ↓</p>
+                <button class="next-btn" onclick="openWishStep(3)">Continue ></button>
+            </div>
+
+            <div id="step-3" class="step" style="display:none;">
+                <h1>Launch Your Star</h1>
+                <p>Pull down and release to launch</p>
+                <div class="launch-zone">
+                    <img id="star-to-launch" src="" class="star-preview">
+                    <div class="pull-handle">
+                        <div class="mouse-icon"></div>
+                    </div>
+                </div>
             </div>
             
         </div>
