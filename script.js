@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// --- 1. CONFIGURATION FIREBASE ---
 const firebaseConfig = {
   apiKey: "AIzaSyC_Kyp7DEOpABxH77R3sS7gcekYe21tZpQ",
   authDomain: "wishglow-6687b.firebaseapp.com",
@@ -15,10 +16,10 @@ const db = getFirestore(app);
 const wishesRef = collection(db, "wishes");
 const isQueen = new URLSearchParams(window.location.search).get('mode') === 'queen';
 
-// --- 1. SKY GENERATION ---
+// --- 2. GÉNÉRATION DU CIEL ÉTOILÉ (BACKGROUND) ---
 const sky = document.getElementById("sky");
 function createBg() {
-    for (let i = 0; i < 180; i++) {
+    for (let i = 0; i < 150; i++) {
         const s = document.createElement('div');
         s.className = 'twinkle-star';
         s.style.left = Math.random() * 100 + "vw";
@@ -29,7 +30,7 @@ function createBg() {
 }
 createBg();
 
-// --- 2. MODALS & DRAWING ---
+// --- 3. GESTION DES FENÊTRES (MODALS) ---
 const modal = document.getElementById('wish-modal');
 const viewModal = document.getElementById('view-modal');
 const canvas = document.getElementById("drawCanvas");
@@ -53,30 +54,45 @@ window.setColor = (c, el) => {
 };
 window.clearCanvas = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-canvas.onmousedown = (e) => { drawing = true; ctx.beginPath(); ctx.strokeStyle = currentColor; ctx.lineWidth = 4; ctx.lineCap = "round"; };
-canvas.onmousemove = (e) => { 
-    if(!drawing) return; 
-    const r = canvas.getBoundingClientRect(); 
-    ctx.lineTo(e.clientX - r.left, e.clientY - r.top); 
-    ctx.stroke(); 
-};
-window.onmouseup = () => drawing = false;
+// --- 4. MOTEUR DE DESSIN (PC + MOBILE) ---
+function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - r.left, y: clientY - r.top };
+}
 
-// --- 3. PULL DOWN TO LAUNCH ---
+function startDraw(e) { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); }
+function moveDraw(e) { 
+    if(!drawing) return; 
+    e.preventDefault(); 
+    const p = getPos(e); 
+    ctx.strokeStyle = currentColor; ctx.lineWidth = 4; ctx.lineCap = "round"; 
+    ctx.lineTo(p.x, p.y); ctx.stroke(); 
+}
+
+canvas.onmousedown = startDraw; canvas.onmousemove = moveDraw; window.onmouseup = () => drawing = false;
+canvas.ontouchstart = startDraw; canvas.ontouchmove = moveDraw; canvas.ontouchend = () => drawing = false;
+
+// --- 5. LANCEMENT PAR GLISSEMENT (PULL DOWN) ---
 const starImg = document.getElementById('star-to-launch');
 let startY = 0;
 let isPulling = false;
 
-starImg.onmousedown = (e) => { startY = e.clientY; isPulling = true; starImg.style.transition = "none"; };
-window.onmousemove = (e) => {
+function startPull(e) { startY = e.touches ? e.touches[0].clientY : e.clientY; isPulling = true; starImg.style.transition = "none"; }
+function movePull(e) {
     if(!isPulling) return;
-    let diff = e.clientY - startY;
+    const currentY = e.touches ? e.touches[0].clientY : e.clientY;
+    let diff = currentY - startY;
     if(diff > 0) {
         starImg.style.transform = `translateY(${diff}px)`;
         if(diff > 140) { launchStar(); isPulling = false; }
     }
-};
-window.onmouseup = () => { isPulling = false; starImg.style.transition = "0.3s"; starImg.style.transform = "translateY(0)"; };
+}
+
+starImg.onmousedown = startPull; window.onmousemove = movePull;
+starImg.ontouchstart = startPull; window.ontouchmove = movePull;
+window.onmouseup = window.ontouchend = () => { isPulling = false; starImg.style.transition = "0.3s"; starImg.style.transform = "translateY(0)"; };
 
 async function launchStar() {
     const data = {
@@ -88,25 +104,29 @@ async function launchStar() {
     };
     await addDoc(wishesRef, data);
     closeModal();
-    location.reload();
+    // Recharger doucement pour voir la nouvelle étoile
+    setTimeout(() => location.reload(), 800);
 }
 
-// --- 4. DISPLAY GALAXY & POPUP ---
+// --- 6. AFFICHAGE DE LA GALAXIE & POPUP DÉTAILS ---
 onSnapshot(query(wishesRef, orderBy("date", "desc")), (snap) => {
-    sky.innerHTML = "";
-    createBg();
+    sky.innerHTML = ""; 
+    createBg(); // Recrée les étoiles de fond
     snap.forEach(doc => {
         const d = doc.data();
         const s = document.createElement('div');
         s.className = 'galaxy-star';
-        s.style.left = Math.random() * 90 + "vw";
-        s.style.top = Math.random() * 80 + "vh";
+        s.style.left = Math.random() * 85 + "vw";
+        s.style.top = Math.random() * 75 + "vh";
         
         const img = document.createElement('img');
         img.src = d.image;
+        
+        // Au clic : Ouvre la Popup (Photo 951a3bfd)
         img.onclick = () => {
             document.getElementById('view-img').src = d.image;
             document.getElementById('view-wish').innerText = d.voeu;
+            // Mode Queen secret
             document.getElementById('view-name').innerText = isQueen ? `${d.nom} (${d.contact})` : d.nom;
             document.getElementById('view-date').innerText = new Date(d.date).toLocaleDateString();
             viewModal.className = 'view-show';
