@@ -15,69 +15,75 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const wishesRef = collection(db, "wishes");
 
-// --- GESTION DU DESSIN ---
+// --- 1. GESTION DES FENÊTRES (ÉTAPES) ---
+window.ouvrirDessin = () => document.getElementById('wish-modal').style.display = 'flex';
+window.passerAuxInfos = () => {
+    document.querySelector('.drawing-area').style.display = 'none';
+    document.getElementById('infos-supplementaires').style.display = 'block';
+};
+
+// --- 2. LOGIQUE DU DESSIN ---
 const canvas = document.getElementById("drawCanvas");
 const ctx = canvas.getContext("2d");
 let drawing = false;
-
-ctx.strokeStyle = "white";
+ctx.strokeStyle = "white"; 
 ctx.lineWidth = 3;
-ctx.lineCap = "round";
 
-const getPos = (e) => {
+canvas.addEventListener("mousedown", () => drawing = true);
+canvas.addEventListener("mousemove", (e) => {
+    if(!drawing) return;
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-    return { x: clientX - rect.left, y: clientY - rect.top };
-};
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+});
+window.addEventListener("mouseup", () => { drawing = false; ctx.beginPath(); });
 
-const start = (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
-const move = (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
-const stop = () => { drawing = false; };
+// --- 3. LANCER L'ÉTOILE (TIRER VERS LE BAS) ---
+let startY = 0;
+const starLaunch = document.getElementById('wish-modal');
 
-canvas.addEventListener("mousedown", start);
-canvas.addEventListener("mousemove", move);
-window.addEventListener("mouseup", stop);
-canvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); });
-canvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); });
+starLaunch.addEventListener('touchstart', (e) => startY = e.touches[0].clientY);
+starLaunch.addEventListener('touchend', (e) => {
+    let endY = e.changedTouches[0].clientY;
+    if (endY > startY + 100) { // Si on tire vers le bas de plus de 100px
+        lancerL_Etoile();
+    }
+});
 
-// --- ENVOI DES DONNÉES ---
-document.getElementById('btn-lancer').onclick = async function() {
+async function lancerL_Etoile() {
     const nom = document.getElementById('star-name').value;
-    const message = document.getElementById('star-wish').value;
-    const contact = `${document.getElementById('contact-type').value}: ${document.getElementById('user-contact').value}`;
+    const voeu = document.getElementById('star-wish').value;
+    const contact = document.getElementById('user-contact').value;
+    const type = document.getElementById('contact-type').value;
 
-    if (!nom || !message) return alert("Remplis ton nom et ton vœu !");
+    if(!nom || !voeu) return alert("Nom et vœu obligatoires !");
 
     try {
+        // SAUVEGARDE DANS FIREBASE
         await addDoc(wishesRef, {
-            auteur: nom,
-            texte: message,
-            contact: contact,
-            etoile: canvas.toDataURL(),
+            nom: nom,
+            voeu: voeu,
+            contact: `${type}: ${contact}`, // Enregistré mais invisible pour les autres
+            dessin: canvas.toDataURL(),
             date: Date.now()
         });
         
-        // Reset formulaire
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        document.getElementById('star-name').value = "";
-        document.getElementById('star-wish').value = "";
-        document.getElementById('user-contact').value = "";
-        alert("Vœu envoyé dans la galaxie ! ✨");
-    } catch (e) { console.error("Erreur Firebase:", e); }
-};
+        starLaunch.style.display = 'none';
+        alert("Ton étoile s'est envolée ! ✨");
+        location.reload(); // Pour rafraîchir le ciel
+    } catch (e) { console.error(e); }
+}
 
-// --- AFFICHAGE TEMPS RÉEL ---
+// --- 4. AFFICHAGE DANS LE CIEL (SANS LES CONTACTS) ---
 onSnapshot(query(wishesRef, orderBy("date", "desc")), (snap) => {
-    const display = document.getElementById("wishes-display");
-    display.innerHTML = "";
+    const sky = document.getElementById("sky");
     snap.forEach((doc) => {
-        const v = doc.data();
-        display.innerHTML += `
-            <div style="background:rgba(255,255,255,0.05); margin:20px; padding:15px; border-radius:20px; text-align:center; border: 1px solid rgba(255,255,255,0.1);">
-                <img src="${v.etoile}" style="width:100px; filter:drop-shadow(0 0 5px white);">
-                <p><b>${v.auteur}</b> (${v.contact})</p>
-                <p style="font-style:italic;">"${v.texte}"</p>
-            </div>`;
+        const data = doc.data();
+        const star = document.createElement('div');
+        star.className = 'star-creee';
+        star.innerHTML = `<img src="${data.dessin}" style="width:50px; cursor:pointer;" onclick="alert('Vœu de ${data.nom}: ${data.voeu}')">`;
+        star.style.left = Math.random() * 90 + "%";
+        star.style.top = Math.random() * 60 + "%";
+        sky.appendChild(star);
     });
 });
