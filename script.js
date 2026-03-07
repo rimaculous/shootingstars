@@ -15,75 +15,84 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const wishesRef = collection(db, "wishes");
 
-// --- 1. GESTION DES FENÊTRES (ÉTAPES) ---
-window.ouvrirDessin = () => document.getElementById('wish-modal').style.display = 'flex';
-window.passerAuxInfos = () => {
-    document.querySelector('.drawing-area').style.display = 'none';
-    document.getElementById('infos-supplementaires').style.display = 'block';
+// --- NAVIGATION ---
+window.ouvrirDessin = () => {
+    document.getElementById('wish-modal').style.display = 'flex';
+    document.getElementById('step-drawing').style.display = 'block';
+    document.getElementById('step-infos').style.display = 'none';
 };
 
-// --- 2. LOGIQUE DU DESSIN ---
+window.passerAuxInfos = () => {
+    document.getElementById('step-drawing').style.display = 'none';
+    document.getElementById('step-infos').style.display = 'block';
+};
+
+// --- DESSIN ---
 const canvas = document.getElementById("drawCanvas");
 const ctx = canvas.getContext("2d");
 let drawing = false;
-ctx.strokeStyle = "white"; 
-ctx.lineWidth = 3;
+ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.lineCap = "round";
 
-canvas.addEventListener("mousedown", () => drawing = true);
-canvas.addEventListener("mousemove", (e) => {
-    if(!drawing) return;
+const getPos = (e) => {
     const rect = canvas.getBoundingClientRect();
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-    ctx.stroke();
-});
-window.addEventListener("mouseup", () => { drawing = false; ctx.beginPath(); });
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    return { x, y };
+};
 
-// --- 3. LANCER L'ÉTOILE (TIRER VERS LE BAS) ---
+canvas.onmousedown = (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+canvas.onmousemove = (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
+window.onmouseup = () => drawing = false;
+
+// --- LANCER L'ÉTOILE (GESTURE BAS) ---
 let startY = 0;
-const starLaunch = document.getElementById('wish-modal');
+const modalContainer = document.getElementById('modal-container');
 
-starLaunch.addEventListener('touchstart', (e) => startY = e.touches[0].clientY);
-starLaunch.addEventListener('touchend', (e) => {
+modalContainer.ontouchstart = (e) => startY = e.touches[0].clientY;
+modalContainer.ontouchend = (e) => {
     let endY = e.changedTouches[0].clientY;
-    if (endY > startY + 100) { // Si on tire vers le bas de plus de 100px
-        lancerL_Etoile();
+    if (endY > startY + 80 && document.getElementById('step-infos').style.display === 'block') {
+        modalContainer.style.transform = "translateY(1000px)"; // Animation de chute
+        lancerEtoile();
     }
-});
+};
 
-async function lancerL_Etoile() {
+async function lancerEtoile() {
     const nom = document.getElementById('star-name').value;
     const voeu = document.getElementById('star-wish').value;
     const contact = document.getElementById('user-contact').value;
     const type = document.getElementById('contact-type').value;
 
-    if(!nom || !voeu) return alert("Nom et vœu obligatoires !");
+    if(!nom || !voeu) return alert("Remplis le nom et le vœu !");
 
     try {
-        // SAUVEGARDE DANS FIREBASE
         await addDoc(wishesRef, {
-            nom: nom,
-            voeu: voeu,
-            contact: `${type}: ${contact}`, // Enregistré mais invisible pour les autres
+            nom: nom, voeu: voeu,
+            contact: `${type}: ${contact}`, // Stocké mais non affiché dans le ciel
             dessin: canvas.toDataURL(),
             date: Date.now()
         });
         
-        starLaunch.style.display = 'none';
-        alert("Ton étoile s'est envolée ! ✨");
-        location.reload(); // Pour rafraîchir le ciel
+        setTimeout(() => {
+            document.getElementById('wish-modal').style.display = 'none';
+            modalContainer.style.transform = "translateY(0)";
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }, 500);
     } catch (e) { console.error(e); }
 }
 
-// --- 4. AFFICHAGE DANS LE CIEL (SANS LES CONTACTS) ---
+// --- AFFICHAGE CIEL ---
 onSnapshot(query(wishesRef, orderBy("date", "desc")), (snap) => {
     const sky = document.getElementById("sky");
+    sky.innerHTML = "";
     snap.forEach((doc) => {
-        const data = doc.data();
+        const d = doc.data();
         const star = document.createElement('div');
         star.className = 'star-creee';
-        star.innerHTML = `<img src="${data.dessin}" style="width:50px; cursor:pointer;" onclick="alert('Vœu de ${data.nom}: ${data.voeu}')">`;
         star.style.left = Math.random() * 90 + "%";
-        star.style.top = Math.random() * 60 + "%";
+        star.style.top = Math.random() * 70 + "%";
+        star.innerHTML = `<img src="${d.dessin}" style="width:50px; cursor:pointer;">`;
+        star.onclick = () => alert(`⭐ Étoile: ${d.nom}\n✨ Vœu: ${d.voeu}`); // Pas de contact affiché ici
         sky.appendChild(star);
     });
 });
