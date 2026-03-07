@@ -8,23 +8,24 @@
 </head>
 <body>
 
-    <div id="stars-container"></div> <h1>Trace ton vœu dans le ciel</h1>
-    
-    <div class="form-container">
-        <input type="text" id="starName" placeholder="Nom de ton étoile...">
-        <textarea id="userWish" placeholder="Écris ton vœu secret ici..."></textarea>
-        <button id="btnLaunch">Lancer dans la galaxie ✨</button>
+    <div id="main-container">
+        <h1>Draw Your Star</h1>
+        
+        <div id="wish-form">
+            <input type="text" id="star-name" placeholder="Ton nom ou pseudo" required>
+            <textarea id="your-wish" placeholder="Écris ton vœu ici..." required></textarea>
+            <button onclick="lancerVoeu(document.getElementById('star-name').value, document.getElementById('your-wish').value)">
+                Lancer mon vœu ✨
+            </button>
+        </div>
+
+        <hr>
+
+        <h2>La Galaxie des Vœux</h2>
+        <div id="wishes-display"></div>
     </div>
-
-    <hr>
-
-    <div id="wishes-display">
-        <h2>Vœux de la constellation :</h2>
-        <div id="wishes-container"></div>
-    </div>
-
-    <div id="queen-lock" style="display:none;">🔒 Espace Privé</div>
 
     <script type="module" src="script.js"></script>
+
 </body>
 </html>
