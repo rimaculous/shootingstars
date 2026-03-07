@@ -9,54 +9,52 @@
 <body>
 
     <div id="sky"></div>
-
     <button id="open-btn" onclick="ouvrirMenu()">+</button>
 
     <div id="wish-modal" class="modal-hidden">
         <div class="modal-content">
             <button class="close-modal" onclick="closeModal()">×</button>
-
             <div id="step-1" class="step">
                 <h2 class="title-step">Draw Your Star</h2>
-                <div class="drawing-area">
-                    <canvas id="drawCanvas" width="300" height="250"></canvas>
-                </div>
+                <div class="drawing-area"><canvas id="drawCanvas" width="300" height="250"></canvas></div>
                 <div class="toolbar">
                     <div class="colors">
                         <div class="color-dot active" style="background:white" onclick="setColor('white', this)"></div>
                         <div class="color-dot" style="background:#add8e6" onclick="setColor('#add8e6', this)"></div>
                         <div class="color-dot" style="background:#ffb6c1" onclick="setColor('#ffb6c1', this)"></div>
-                        <div class="color-dot" style="background:#fafad2" onclick="setColor('#fafad2', this)"></div>
                     </div>
                     <button class="action-btn" onclick="clearCanvas()">Undo</button>
                     <button class="next-btn" onclick="openStep(2)">Continue ></button>
                 </div>
             </div>
-
             <div id="step-2" class="step" style="display:none;">
-                <h2 class="title-step">Star Details</h2>
-                <input type="text" id="star-name" placeholder="Star Name (Nickname)">
+                <h2 class="title-step">Details</h2>
+                <input type="text" id="star-name" placeholder="Nickname">
                 <div class="contact-row">
-                    <select id="contact-type">
-                        <option value="Insta">Insta</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="Wtsp">Wtsp</option>
-                    </select>
+                    <select id="contact-type"><option value="Insta">Insta</option><option value="TikTok">TikTok</option></select>
                     <input type="text" id="user-contact" placeholder="@account">
                 </div>
-                <textarea id="star-wish" placeholder="Confide your wish to the star..."></textarea>
+                <textarea id="star-wish" placeholder="Your wish..."></textarea>
                 <button class="next-btn" onclick="openStep(3)">Next ></button>
             </div>
-
             <div id="step-3" class="step" style="display:none;">
-                <h2 class="title-step">Launch Your Star</h2>
-                <p class="instruction">Pull down and release to launch</p>
+                <h2 class="title-step">Launch</h2>
                 <div id="launch-zone">
                     <img id="star-to-launch" src="" class="star-preview">
-                    <div class="mouse-icon-container">
-                        <div class="mouse-icon"></div>
-                    </div>
+                    <div class="mouse-icon"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-modal" class="view-modal-hidden">
+        <div class="view-content">
+            <button class="close-view" onclick="closeView()">×</button>
+            <img id="view-img" src="">
+            <p id="view-wish"></p>
+            <div class="view-footer">
+                <span id="view-name"></span>
+                <span id="view-date"></span>
             </div>
         </div>
     </div>
