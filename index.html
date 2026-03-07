@@ -10,49 +10,46 @@
 
     <div id="sky"></div>
 
+    <button class="btn-ouvrir" onclick="ouvrirDessin()">+</button>
+
     <div id="wish-modal">
-        <div class="modal-content">
-            <h1>Draw Your Star</h1>
+        <div class="modal-content" id="modal-container">
             
-            <div class="drawing-area">
-                <canvas id="drawCanvas" width="300" height="220"></canvas>
-            </div>
-            
-            <div class="input-group">
-                <label>STAR NAME</label>
-                <div class="input-wrapper">
-                    <input type="text" id="star-name" placeholder="Ton pseudo..." required>
+            <div id="step-drawing">
+                <h3>Dessine ton étoile</h3>
+                <div class="drawing-area">
+                    <canvas id="drawCanvas" width="280" height="200"></canvas>
                 </div>
+                <button class="btn-next" onclick="passerAuxInfos()">Continuer</button>
             </div>
 
-            <div class="input-group">
-                <label>CONTACT (Optionnel)</label>
-                <div class="input-wrapper">
-                    <select id="contact-type" style="background:none; color:white; border:none; font-size:0.7rem;">
-                        <option value="insta">Instagram</option>
-                        <option value="tiktok">TikTok</option>
-                        <option value="wtsp">WhatsApp</option>
-                    </select>
-                    <input type="text" id="user-contact" placeholder="@toncompte">
+            <div id="step-infos" style="display:none;">
+                <div class="input-group">
+                    <label>NOM DE L'ÉTOILE</label>
+                    <input type="text" id="star-name" placeholder="Son petit nom...">
                 </div>
-            </div>
 
-            <div class="input-group">
-                <label>YOUR WISH</label>
-                <div class="input-wrapper">
-                    <textarea id="star-wish" placeholder="Confie ton vœu à l'étoile..."></textarea>
+                <div class="input-group">
+                    <label>CONTACT (Privé)</label>
+                    <div class="row">
+                        <select id="contact-type">
+                            <option value="Insta">Instagram</option>
+                            <option value="TikTok">TikTok</option>
+                            <option value="Wtsp">WhatsApp</option>
+                        </select>
+                        <input type="text" id="user-contact" placeholder="@pseudo / num">
+                    </div>
                 </div>
-            </div>
-            
-            <div class="launch-zone">
-                <button id="btn-lancer" style="background: white; color: #1b2735; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer;">
-                    Lancer mon vœu ✨
-                </button>
+
+                <div class="input-group">
+                    <label>TON VŒU</label>
+                    <textarea id="star-wish" placeholder="Confie ton secret..."></textarea>
+                </div>
+                
+                <p class="hint">Tire la fenêtre vers le bas pour lancer ! ↓</p>
             </div>
         </div>
     </div>
-
-    <div id="wishes-display"></div>
 
     <script type="module" src="script.js"></script>
 </body>
