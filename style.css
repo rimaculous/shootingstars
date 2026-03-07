@@ -1,41 +1,171 @@
-body { margin:0; background:#000; color:white; font-family:'Courier New', monospace; overflow:hidden; user-select: none; }
-#sky { width:100vw; height:100vh; position:fixed; background: radial-gradient(circle at center, #1b2735 0%, #000 100%); z-index: -1; }
+/* --- 1. BASE & BACKGROUND --- */
+body { 
+    margin: 0; 
+    background: #000; 
+    color: white; 
+    font-family: 'Courier New', monospace; 
+    overflow: hidden; 
+    touch-action: manipulation; /* Empêche les bugs de zoom sur tel */
+    user-select: none;
+}
 
-/* BACKGROUND STARS */
+#sky { 
+    width: 100vw; 
+    height: 100vh; 
+    position: fixed; 
+    background: radial-gradient(circle at center, #1b2735 0%, #000 100%); 
+    z-index: -1; 
+}
+
+/* --- 2. SCINTILLATING STARS (Le fond étoilé) --- */
 .twinkle-star {
-    position: absolute; width: 2px; height: 2px; background: white; border-radius: 50%;
-    box-shadow: 0 0 8px 1px white; z-index: 0; animation: twinkle 4s infinite ease-in-out;
+    position: absolute; 
+    width: 2px; 
+    height: 2px; 
+    background: white; 
+    border-radius: 50%;
+    box-shadow: 0 0 8px 1px white; 
+    z-index: 0; 
+    animation: twinkle 4s infinite ease-in-out;
 }
-@keyframes twinkle { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.5); } }
 
-/* BUTTONS & MODALS */
-#open-btn { position:fixed; top:20px; left:20px; width:45px; height:45px; border-radius:50%; border:1px solid white; background:rgba(255,255,255,0.1); color:white; font-size:20px; cursor:pointer; z-index:100; }
-.modal-hidden, .view-modal-hidden { display:none; }
-.modal-show, .view-show { display:flex; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:1000; }
+@keyframes twinkle { 
+    0%, 100% { opacity: 0.3; transform: scale(1); } 
+    50% { opacity: 1; transform: scale(1.4); } 
+}
 
-/* CREATE WISH CONTENT */
-.modal-content { background:#1b2735; padding:20px; border-radius:20px; width:320px; text-align:center; border: 1px solid rgba(255,255,255,0.1); position:relative; }
-.drawing-area { background:#090a0f; border-radius:15px; margin:15px 0; height:250px; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; }
+/* --- 3. UI BUTTONS --- */
+#open-btn { 
+    position: fixed; 
+    top: 20px; 
+    left: 20px; 
+    width: 45px; 
+    height: 45px; 
+    border-radius: 50%; 
+    border: 1px solid white; 
+    background: rgba(255, 255, 255, 0.1); 
+    color: white; 
+    font-size: 22px; 
+    cursor: pointer; 
+    z-index: 100; 
+    transition: 0.3s;
+}
 
-/* VIEW WISH CONTENT (Photo 951a3bfd) */
+#open-btn:hover { background: white; color: #1b2735; }
+
+/* --- 4. MODALS (Général) --- */
+.modal-hidden, .view-modal-hidden { display: none; }
+.modal-show, .view-show { 
+    display: flex !important; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0, 0, 0, 0.85); 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1000; 
+}
+
+/* --- 5. CREATE WISH MODAL (Photo 7) --- */
+.modal-content { 
+    background: #1b2735; 
+    padding: 20px; 
+    border-radius: 20px; 
+    width: 85%; 
+    max-width: 320px; 
+    text-align: center; 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    position: relative; 
+}
+
+.drawing-area { 
+    background: #090a0f; 
+    border-radius: 15px; 
+    margin: 15px 0; 
+    height: 250px; 
+    touch-action: none; 
+    background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px), 
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px); 
+    background-size: 20px 20px; /* La grille du dessin */
+}
+
+#drawCanvas { width: 100%; height: 100%; cursor: crosshair; }
+
+/* --- 6. VIEW WISH POPUP (Photo 951a3bfd) --- */
 .view-content {
-    background: rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 30px;
-    width: 80%; max-width: 400px; text-align: center; position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.06); 
+    padding: 40px; 
+    border-radius: 30px; 
+    width: 85%; 
+    max-width: 400px; 
+    text-align: center; 
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    backdrop-filter: blur(12px);
+    animation: popupScale 0.3s ease-out;
 }
-.close-view { position: absolute; top: 20px; left: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer; opacity: 0.5; }
-#view-img { width: 110px; margin-bottom: 25px; filter: drop-shadow(0 0 15px white); }
-#view-wish { font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px; color: #fff; }
-.view-footer { display: flex; flex-direction: column; gap: 4px; opacity: 0.5; font-size: 0.85rem; }
 
-/* GALAXY STARS */
-.galaxy-star { position:absolute; cursor:pointer; transition: 0.3s; }
-.galaxy-star img { width:65px; filter: drop-shadow(0 0 8px white); }
-.galaxy-star:hover { transform: scale(1.2); }
+@keyframes popupScale {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
 
-/* LAUNCH */
-#launch-zone { height:250px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor: grab; }
-.star-preview { width:80px; filter: drop-shadow(0 0 10px white); }
-.mouse-icon { width:18px; height:28px; border:2px solid white; border-radius:10px; position:relative; margin-top:20px; }
-.mouse-icon::before { content:""; position:absolute; top:5px; left:50%; transform:translateX(-50%); width:3px; height:6px; background:white; border-radius:2px; animation: scroll 1.2s infinite; }
-@keyframes scroll { 0% { opacity:1; top:5px; } 100% { opacity:0; top:18px; } }
+.close-view { 
+    position: absolute; top: 15px; left: 15px; 
+    background: none; border: none; color: white; 
+    font-size: 24px; cursor: pointer; opacity: 0.5; 
+}
+
+#view-img { width: 100px; margin-bottom: 20px; filter: drop-shadow(0 0 10px white); }
+#view-wish { font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px; font-weight: bold; }
+.view-footer { display: flex; flex-direction: column; gap: 4px; opacity: 0.5; font-size: 0.8rem; }
+
+/* --- 7. GALAXY STARS (Vœux flottants) --- */
+.galaxy-star { position: absolute; cursor: pointer; transition: 0.3s; }
+.galaxy-star img { width: 55px; filter: drop-shadow(0 0 8px white); }
+.galaxy-star:hover { transform: scale(1.25); z-index: 10; }
+
+/* --- 8. LAUNCH ZONE (Pull Down - Photo 8) --- */
+#launch-zone { 
+    height: 250px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    touch-action: none; 
+}
+
+.star-preview { width: 85px; filter: drop-shadow(0 0 12px white); cursor: grab; }
+.mouse-icon { 
+    width: 18px; height: 28px; 
+    border: 2px solid white; border-radius: 10px; 
+    position: relative; margin-top: 25px; opacity: 0.7;
+}
+.mouse-icon::before { 
+    content: ""; position: absolute; 
+    top: 5px; left: 50%; transform: translateX(-50%); 
+    width: 3px; height: 6px; background: white; 
+    border-radius: 2px; animation: mouseScroll 1.2s infinite; 
+}
+
+@keyframes mouseScroll { 
+    0% { opacity: 1; top: 5px; } 
+    100% { opacity: 0; top: 18px; } 
+}
+
+/* --- 9. FORM ELEMENTS --- */
+input, textarea, select { 
+    width: 90%; margin: 8px 0; padding: 12px; 
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid rgba(255, 255, 255, 0.2); 
+    color: white; border-radius: 10px; outline: none; 
+}
+.contact-row { display: flex; gap: 5px; width: 95%; margin: 0 auto; }
+button.next-btn { 
+    background: white; color: #1b2735; 
+    font-weight: bold; border: none; 
+    padding: 10px 20px; border-radius: 20px; 
+    cursor: pointer; margin-top: 10px;
+}
