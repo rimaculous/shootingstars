@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Tes clés Firebase récupérées sur tes photos
 const firebaseConfig = {
   apiKey: "AIzaSyC_Kyp7DEOpABxH77R3sS7gcekYe21tZpQ",
   authDomain: "wishglow-6687b.firebaseapp.com",
@@ -16,36 +15,60 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const wishesRef = collection(db, "wishes");
 
-// --- 1. FONCTION POUR ENVOYER LE VŒU + LE DESSIN ---
+// --- LOGIQUE DE DESSIN (LE PINCEAU) ---
+const canvas = document.getElementById("drawCanvas");
+const ctx = canvas ? canvas.getContext("2d") : null;
+let drawing = false;
+
+if (canvas && ctx) {
+    // Configuration du pinceau
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+
+    const startDrawing = (e) => { drawing = true; draw(e); };
+    const stopDrawing = () => { drawing = false; ctx.beginPath(); };
+    const draw = (e) => {
+        if (!drawing) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || e.touches[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches[0].clientY) - rect.top;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    };
+
+    canvas.addEventListener("mousedown", startDrawing);
+    canvas.addEventListener("mousemove", draw);
+    canvas.addEventListener("mouseup", stopDrawing);
+    // Support mobile
+    canvas.addEventListener("touchstart", startDrawing);
+    canvas.addEventListener("touchmove", draw);
+    canvas.addEventListener("touchend", stopDrawing);
+}
+
+// --- FONCTION POUR ENVOYER LE VŒU + LE DESSIN ---
 window.lancerVoeu = async function(nom, message) {
     if (!nom || !message) {
         alert("N'oublie pas de remplir ton nom et ton vœu !");
         return;
     }
 
-    // On récupère le canvas pour capturer ton dessin
-    const canvas = document.querySelector("canvas");
-    let imageDessin = "";
-    
-    if (canvas) {
-        imageDessin = canvas.toDataURL(); // Transforme le dessin en texte (Base64)
-    }
+    let imageDessin = canvas ? canvas.toDataURL() : "";
 
     try {
         await addDoc(wishesRef, {
             auteur: nom,
             texte: message,
-            etoile: imageDessin, // On enregistre l'image du dessin
+            etoile: imageDessin,
             date: Date.now()
         });
 
-        // Nettoyage après l'envoi
+        // Nettoyage
         document.getElementById('star-name').value = "";
-        document.getElementById('your-wish').value = "";
-        if (canvas) {
-            const ctx = canvas.getContext("2d");
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+        document.getElementById('star-wish').value = ""; // Vérifie bien l'ID ici
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         console.log("Ton étoile a rejoint la galaxie !");
     } catch (e) {
@@ -53,20 +76,17 @@ window.lancerVoeu = async function(nom, message) {
     }
 };
 
-// --- 2. AFFICHAGE DES DESSINS ET VŒUX DES AUTRES (TEMPS RÉEL) ---
+// --- AFFICHAGE EN TEMPS RÉEL ---
 const display = document.getElementById("wishes-display");
-
 onSnapshot(query(wishesRef, orderBy("date", "desc")), (snapshot) => {
     if (display) {
-        display.innerHTML = ""; // On vide pour mettre à jour
+        display.innerHTML = "";
         snapshot.forEach((doc) => {
             const v = doc.data();
-            
-            // On crée une petite carte pour chaque vœu avec son dessin
             display.innerHTML += `
-                <div class="wish-card" style="margin-bottom: 20px; border: 1px solid #444; padding: 10px; border-radius: 10px;">
-                    ${v.etoile ? `<img src="${v.etoile}" style="width:150px; background: black; border-radius: 50%; display: block; margin: 0 auto;">` : ''}
-                    <p style="text-align: center; color: white;">
+                <div class="wish-card" style="margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                    ${v.etoile ? `<img src="${v.etoile}" style="width:100px; height:100px; display: block; margin: 0 auto; filter: drop-shadow(0 0 5px white);">` : ''}
+                    <p style="text-align: center; margin-top: 10px;">
                         <strong>${v.auteur}</strong> : ${v.texte}
                     </p>
                 </div>
