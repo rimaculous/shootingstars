@@ -1,59 +1,61 @@
 body { margin:0; background:#000; color:white; font-family:'Courier New', monospace; overflow:hidden; user-select: none; }
-#sky { width:100vw; height:100vh; position:fixed; background: radial-gradient(circle at center, #1b2735 0%, #000 100%); z-index: -2; }
+#sky { width:100vw; height:100vh; position:fixed; background: radial-gradient(circle at center, #1b2735 0%, #000 100%); z-index: -1; }
 
-/* 1. Scintillating Background Stars (Photo 0) */
+/* 1. SCINTILLATING BACKGROUND STARS (Photo 10 correction) */
 .twinkle-star {
     position: absolute; width: 2px; height: 2px; background: white; border-radius: 50%;
-    box-shadow: 0 0 5px white; animation: twinkle 4s infinite ease-in-out; opacity: 0.2;
+    box-shadow: 0 0 5px white; animation: twinkle 4s infinite ease-in-out; opacity: 0;
 }
-@keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+@keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
 
-/* Shooting Star */
+/* Shooting Star (Existing) */
 #sky::after {
     content: ""; position: absolute; width: 3px; height: 3px; background: white;
     border-radius: 50%; box-shadow: 0 0 20px 2px white;
-    animation: shootingStar 10s linear infinite; opacity: 0; z-index: -1;
+    animation: shootingStar 8s linear infinite; opacity: 0;
 }
 @keyframes shootingStar {
     0% { transform: translate(0, 0); opacity: 0; }
-    2% { opacity: 1; }
-    8% { transform: translate(700px, 700px); opacity: 0; }
-    100% { transform: translate(700px, 700px); opacity: 0; }
+    3% { opacity: 1; }
+    10% { transform: translate(600px, 600px); opacity: 0; }
+    100% { transform: translate(600px, 600px); opacity: 0; }
 }
 
-/* 2. Modal and Drawing Area (Photo 6) */
-.modal-show { display:flex; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:1000; }
-.modal-content { background:#1b2735; padding:25px; border-radius:20px; width:340px; text-align:center; border: 1px solid rgba(255,255,255,0.1); }
+/* 2. OPEN BUTTON (Photo 9) */
+#open-btn { position:fixed; top:20px; left:20px; width:50px; height:50px; border-radius:50%; border:1px solid white; background:rgba(255,255,255,0.1); color:white; font-size:24px; cursor:pointer; z-index:100; transition: 0.3s; }
+#open-btn:hover { background: white; color: #1b2735; }
+
+/* 3. MODAL DESIGN (Hidden by default, grid background) */
+.modal-hidden { display:none; }
+.modal-show { display:flex; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:1000; animation: fadeIn 0.3s; }
+
+.modal-content { background:#1b2735; padding:25px; border-radius:20px; width:340px; text-align:center; border: 1px solid rgba(255,255,255,0.1); position:relative; }
+.close-modal { position:absolute; top:10px; right:15px; background:none; border:none; color:white; font-size:24px; cursor:pointer; }
+
+/* Drawing Area (Photo 7 Grid) */
 .drawing-area { 
-    background:#090a0f; border-radius:15px; margin:15px 0; height:250px; position:relative; overflow:hidden;
+    background:#090a0f; border-radius:15px; margin:15px 0; height:250px; 
     background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 20px 20px;
+    background-size: 20px 20px; /* Draw Grid */
 }
 #drawCanvas { width:100%; height:100%; cursor: crosshair; }
 
-/* Tools */
-.toolbar { display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
-.colors { display:flex; gap:8px; }
-.color-dot { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:0.2s; }
-.color-dot.active { border-color:white; box-shadow:0 0 10px white; }
+/* Tools & Inputs */
+.toolbar { display:flex; justify-content:space-around; margin-top:10px; }
 button { background:none; border:1px solid white; color:white; padding:8px 15px; border-radius:15px; cursor:pointer; font-family:inherit; }
 .next-btn { background:white; color:#1b2735; font-weight:bold; }
-
-/* Inputs */
 input, textarea, select { width:90%; margin:8px 0; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2); color:white; border-radius:10px; outline:none; }
 .contact-row { display:flex; gap:5px; width:95%; margin: 0 auto;}
 
-/* 3. Launch Pad (Photo 8) */
-.launch-zone { height:300px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; }
-.star-preview { width:100px; filter: drop-shadow(0 0 15px white); transition: 0.1s; cursor: grab; }
-.star-preview.dragging { cursor: grabbing; box-shadow: 0 10px 30px rgba(255,255,255,0.2); }
-.pull-handle { position:absolute; bottom:20px; }
-.mouse-icon { width:20px; height:30px; border:2px solid white; border-radius:10px; position:relative; }
-.mouse-icon::before { content:""; position:absolute; top:5px; left:50%; transform:translateX(-50%); width:4px; height:8px; background:white; border-radius:2px; animation: mouseScroll 1s infinite; }
-@keyframes mouseScroll { 0% { opacity:1; top:5px; } 100% { opacity:0; top:15px; } }
+/* 4. LAUNCH PAD (Photo 8 Pull-down) */
+.launch-zone { height:300px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; cursor: grab; }
+.star-preview { width:100px; filter: drop-shadow(0 0 15px white); }
+.pull-handle { position:absolute; bottom:20px; text-align:center; opacity:0.6; }
+.instruction { font-size:0.8rem; color:#aaa; margin-top:5px;}
 
 /* Galaxy Stars */
 .galaxy-star { position:absolute; cursor:pointer; animation: starTwinkle 5s infinite; transition: 0.3s; }
 .galaxy-star img { width:70px; filter: drop-shadow(0 0 10px white); }
 .galaxy-star:hover { transform: scale(1.3); z-index: 10; }
 @keyframes starTwinkle { 0%, 100% { opacity:1; } 50% { opacity:0.5; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
