@@ -11,9 +11,10 @@
     <div id="main-container">
         <h1>Draw Your Star</h1>
         
-        <div id="wish-form">
-            <input type="text" id="star-name" placeholder="Ton nom ou pseudo" required>
+        <div class="wish-input-area">
+            <input type="text" id="star-name" placeholder="Ton nom (Star Name)" required>
             <textarea id="your-wish" placeholder="Écris ton vœu ici..." required></textarea>
+            
             <button onclick="lancerVoeu(document.getElementById('star-name').value, document.getElementById('your-wish').value)">
                 Lancer mon vœu ✨
             </button>
