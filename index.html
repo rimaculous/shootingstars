@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishing-Star | Secret Galaxy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="stars-container"></div> <h1>Trace ton vœu dans le ciel</h1>
+    
+    <div class="form-container">
+        <input type="text" id="starName" placeholder="Nom de ton étoile...">
+        <textarea id="userWish" placeholder="Écris ton vœu secret ici..."></textarea>
+        <button id="btnLaunch">Lancer dans la galaxie ✨</button>
+    </div>
+
+    <hr>
+
+    <div id="wishes-display">
+        <h2>Vœux de la constellation :</h2>
+        <div id="wishes-container"></div>
+    </div>
+
+    <div id="queen-lock" style="display:none;">🔒 Espace Privé</div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
