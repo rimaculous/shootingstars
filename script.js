@@ -1,6 +1,8 @@
+// 1. UTILISATION DES LIENS COMPLETS (CDN) - OBLIGATOIRE POUR TON SITE
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// Tes clés (Vérifiées : elles sont correctes !)
 const firebaseConfig = {
   apiKey: "AIzaSyC_Kyp7DEOpABxH77R3sS7gcekYe21tZpQ",
   authDomain: "wishglow-6687b.firebaseapp.com",
@@ -15,47 +17,43 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const wishesRef = collection(db, "wishes");
 
-// --- LOGIQUE DE DESSIN (LE PINCEAU) ---
+// --- LOGIQUE DU DESSIN ---
 const canvas = document.getElementById("drawCanvas");
 const ctx = canvas ? canvas.getContext("2d") : null;
 let drawing = false;
 
 if (canvas && ctx) {
-    // Configuration du pinceau
     ctx.strokeStyle = "white";
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
 
-    const startDrawing = (e) => { drawing = true; draw(e); };
-    const stopDrawing = () => { drawing = false; ctx.beginPath(); };
-    const draw = (e) => {
-        if (!drawing) return;
+    const getPos = (e) => {
         const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
-        ctx.lineTo(x, y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(x, y);
+        return {
+            x: (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left,
+            y: (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top
+        };
     };
 
-    canvas.addEventListener("mousedown", startDrawing);
-    canvas.addEventListener("mousemove", draw);
-    canvas.addEventListener("mouseup", stopDrawing);
-    // Support mobile
-    canvas.addEventListener("touchstart", startDrawing);
-    canvas.addEventListener("touchmove", draw);
-    canvas.addEventListener("touchend", stopDrawing);
+    const start = (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+    const move = (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
+    const stop = () => { drawing = false; };
+
+    canvas.addEventListener("mousedown", start);
+    canvas.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", stop);
+    canvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); });
+    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); });
 }
 
-// --- FONCTION POUR ENVOYER LE VŒU + LE DESSIN ---
+// --- ENVOYER LE VŒU ET LE DESSIN ---
 window.lancerVoeu = async function(nom, message) {
     if (!nom || !message) {
-        alert("N'oublie pas de remplir ton nom et ton vœu !");
+        alert("Remplis ton nom et ton vœu !");
         return;
     }
 
-    let imageDessin = canvas ? canvas.toDataURL() : "";
+    const imageDessin = canvas ? canvas.toDataURL() : "";
 
     try {
         await addDoc(wishesRef, {
@@ -64,19 +62,19 @@ window.lancerVoeu = async function(nom, message) {
             etoile: imageDessin,
             date: Date.now()
         });
-
-        // Nettoyage
-        document.getElementById('star-name').value = "";
-        document.getElementById('star-wish').value = ""; // Vérifie bien l'ID ici
-        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        console.log("Ton étoile a rejoint la galaxie !");
+        // Reset
+        document.getElementById('star-name').value = "";
+        document.getElementById('star-wish').value = "";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        alert("Vœu envoyé ! ✨");
     } catch (e) {
-        console.error("Erreur lors de l'envoi : ", e);
+        console.error("Erreur Firebase : ", e);
+        alert("Erreur d'envoi. Vérifie tes 'Rules' sur Firebase !");
     }
 };
 
-// --- AFFICHAGE EN TEMPS RÉEL ---
+// --- AFFICHER LES VŒUX DES AUTRES ---
 const display = document.getElementById("wishes-display");
 onSnapshot(query(wishesRef, orderBy("date", "desc")), (snapshot) => {
     if (display) {
@@ -84,11 +82,9 @@ onSnapshot(query(wishesRef, orderBy("date", "desc")), (snapshot) => {
         snapshot.forEach((doc) => {
             const v = doc.data();
             display.innerHTML += `
-                <div class="wish-card" style="margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
-                    ${v.etoile ? `<img src="${v.etoile}" style="width:100px; height:100px; display: block; margin: 0 auto; filter: drop-shadow(0 0 5px white);">` : ''}
-                    <p style="text-align: center; margin-top: 10px;">
-                        <strong>${v.auteur}</strong> : ${v.texte}
-                    </p>
+                <div style="margin: 15px; padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 15px; text-align: center;">
+                    <img src="${v.etoile}" style="width: 80px; filter: drop-shadow(0 0 5px white);">
+                    <p><b>${v.auteur}</b> : ${v.texte}</p>
                 </div>
             `;
         });
