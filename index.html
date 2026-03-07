@@ -2,52 +2,42 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wishing-Star | Secret Galaxy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wishing-Star | Galaxy</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="sky"></div>
+    <div id="sky"></div> <button id="open-btn" onclick="ouvrirMenu()">+</button>
 
-    <button class="btn-ouvrir" onclick="ouvrirDessin()">+</button>
-
-    <div id="wish-modal">
-        <div class="modal-content" id="modal-container">
+    <div id="wish-modal" class="modal-hidden">
+        <div class="modal-content">
             
-            <div id="step-drawing">
-                <h3>Dessine ton étoile</h3>
+            <div id="step-draw">
+                <h1>Draw Your Star</h1>
                 <div class="drawing-area">
-                    <canvas id="drawCanvas" width="280" height="200"></canvas>
+                    <canvas id="drawCanvas" width="300" height="250"></canvas>
                 </div>
-                <button class="btn-next" onclick="passerAuxInfos()">Continuer</button>
+                <button class="next-btn" onclick="allerAuxInfos()">Continuer</button>
             </div>
 
-            <div id="step-infos" style="display:none;">
+            <div id="step-info" style="display:none;">
+                <h1>Star Details</h1>
                 <div class="input-group">
-                    <label>NOM DE L'ÉTOILE</label>
-                    <input type="text" id="star-name" placeholder="Son petit nom...">
-                </div>
-
-                <div class="input-group">
-                    <label>CONTACT (Privé)</label>
-                    <div class="row">
-                        <select id="contact-type">
-                            <option value="Insta">Instagram</option>
+                    <input type="text" id="star-name" placeholder="Nom de l'étoile">
+                    <div class="contact-row" style="display: flex; gap: 5px;">
+                        <select id="contact-type" style="width: 30%;">
+                            <option value="Insta">Insta</option>
                             <option value="TikTok">TikTok</option>
-                            <option value="Wtsp">WhatsApp</option>
+                            <option value="Wtsp">Wtsp</option>
                         </select>
-                        <input type="text" id="user-contact" placeholder="@pseudo / num">
+                        <input type="text" id="user-contact" placeholder="@toncompte" style="width: 70%;">
                     </div>
+                    <textarea id="star-wish" placeholder="Confie ton vœu..."></textarea>
                 </div>
-
-                <div class="input-group">
-                    <label>TON VŒU</label>
-                    <textarea id="star-wish" placeholder="Confie ton secret..."></textarea>
-                </div>
-                
-                <p class="hint">Tire la fenêtre vers le bas pour lancer ! ↓</p>
+                <p class="instruction">Tire cette fenêtre vers le bas pour lancer l'étoile ! ↓</p>
             </div>
+            
         </div>
     </div>
 
