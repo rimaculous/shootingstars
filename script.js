@@ -1,14 +1,13 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// --- 1. CONFIGURATION FIREBASE ---
 const firebaseConfig = {
-  apiKey: "AIzaSyC_Kyp7DEOpABxH77R3sS7gcekYe21tZpQ",
-  authDomain: "wishglow-6687b.firebaseapp.com",
-  projectId: "wishglow-6687b",
-  storageBucket: "wishglow-6687b.firebasestorage.app",
-  messagingSenderId: "512146739720",
-  appId: "1:512146739720:web:5712be2a00d5f5eb0977bd"
+    apiKey: "AIzaSyC_Kyp7DEOpABxH77R3sS7gcekYe21tZpQ",
+    authDomain: "wishglow-6687b.firebaseapp.com",
+    projectId: "wishglow-6687b",
+    storageBucket: "wishglow-6687b.firebasestorage.app",
+    messagingSenderId: "512146739720",
+    appId: "1:512146739720:web:5712be2a00d5f5eb0977bd"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -16,122 +15,134 @@ const db = getFirestore(app);
 const wishesRef = collection(db, "wishes");
 const isQueen = new URLSearchParams(window.location.search).get('mode') === 'queen';
 
-// --- 2. GÉNÉRATION DU CIEL ÉTOILÉ (BACKGROUND) ---
+// --- SKY SETUP (1200 ÉTOILES) ---
 const sky = document.getElementById("sky");
-function createBg() {
-    for (let i = 0; i < 150; i++) {
-        const s = document.createElement('div');
-        s.className = 'twinkle-star';
-        s.style.left = Math.random() * 100 + "vw";
-        s.style.top = Math.random() * 100 + "vh";
-        s.style.animationDelay = Math.random() * 5 + "s";
-        sky.appendChild(s);
-    }
+for (let i = 0; i < 1200; i++) {
+    const s = document.createElement('div');
+    s.className = 'twinkle-star';
+    s.style.left = Math.random() * 3000 + "px";
+    s.style.top = Math.random() * 3000 + "px";
+    s.style.animationDelay = Math.random() * 5 + "s";
+    sky.appendChild(s);
 }
-createBg();
+window.scrollTo(1500 - window.innerWidth/2, 1500 - window.innerHeight/2);
 
-// --- 3. GESTION DES FENÊTRES (MODALS) ---
+// --- MODALS ---
 const modal = document.getElementById('wish-modal');
 const viewModal = document.getElementById('view-modal');
+const welcomeModal = document.getElementById('welcome-modal');
+const confirmModal = document.getElementById('confirm-modal');
 const canvas = document.getElementById("drawCanvas");
 const ctx = canvas.getContext("2d");
-let drawing = false;
-let currentColor = 'white';
+let drawing = false; let currentColor = '#ffffff';
 
 window.ouvrirMenu = () => modal.className = 'modal-show';
-window.closeModal = () => modal.className = 'modal-hidden';
+window.closeModal = () => { modal.className = 'modal-hidden'; openStep(1); clearCanvas(); };
 window.closeView = () => viewModal.className = 'view-modal-hidden';
+window.closeWelcome = () => welcomeModal.className = 'view-modal-hidden';
+window.closeConfirm = () => { confirmModal.className = 'view-modal-hidden'; location.reload(); };
+
+window.onload = () => { setTimeout(() => { welcomeModal.className = 'view-show'; }, 600); };
 
 window.openStep = (n) => {
     document.querySelectorAll('.step').forEach((s, i) => s.style.display = (i+1 === n) ? 'block' : 'none');
     if(n === 3) document.getElementById('star-to-launch').src = canvas.toDataURL();
 };
 
-window.setColor = (c, el) => {
-    currentColor = c;
-    document.querySelector('.color-dot.active').classList.remove('active');
-    el.classList.add('active');
-};
-window.clearCanvas = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-// --- 4. MOTEUR DE DESSIN (PC + MOBILE) ---
+// --- DESSIN (EFFET DOUX + ARRÊT PROPRE) ---
 function getPos(e) {
     const r = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x: clientX - r.left, y: clientY - r.top };
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+    return { x: cx - r.left, y: cy - r.top };
 }
 
-function startDraw(e) { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); }
-function moveDraw(e) { 
-    if(!drawing) return; 
-    e.preventDefault(); 
-    const p = getPos(e); 
-    ctx.strokeStyle = currentColor; ctx.lineWidth = 4; ctx.lineCap = "round"; 
-    ctx.lineTo(p.x, p.y); ctx.stroke(); 
-}
+canvas.addEventListener('mousedown', (e) => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); });
+canvas.addEventListener('mousemove', (e) => {
+    if (!drawing) return; e.preventDefault();
+    const p = getPos(e);
+    ctx.strokeStyle = currentColor; ctx.lineWidth = 3; ctx.lineCap = "round";
+    ctx.shadowBlur = 3; ctx.shadowColor = currentColor;
+    ctx.lineTo(p.x, p.y); ctx.stroke();
+});
+window.addEventListener('mouseup', () => { drawing = false; ctx.shadowBlur = 0; });
 
-canvas.onmousedown = startDraw; canvas.onmousemove = moveDraw; window.onmouseup = () => drawing = false;
-canvas.ontouchstart = startDraw; canvas.ontouchmove = moveDraw; canvas.ontouchend = () => drawing = false;
+// Support Mobile
+canvas.addEventListener('touchstart', (e) => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); });
+canvas.addEventListener('touchmove', (e) => { if(!drawing) return; e.preventDefault(); const p = getPos(e); ctx.strokeStyle = currentColor; ctx.lineWidth = 3; ctx.shadowBlur = 3; ctx.shadowColor = currentColor; ctx.lineTo(p.x, p.y); ctx.stroke(); });
+canvas.addEventListener('touchend', () => { drawing = false; });
 
-// --- 5. LANCEMENT PAR GLISSEMENT (PULL DOWN) ---
+window.setColor = (c, el) => { currentColor = c; document.querySelector('.color-dot.active').classList.remove('active'); el.classList.add('active'); };
+window.clearCanvas = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// --- VALIDATION ÉTAPE 2 ---
+window.validerEtape2 = () => {
+    const n = document.getElementById('star-name');
+    const v = document.getElementById('star-wish');
+    const c = document.getElementById('user-contact');
+    let err = false;
+    [n,v,c].forEach(el => el.classList.remove('error-field'));
+    if(!n.value.trim()){ n.classList.add('error-field'); err=true; }
+    if(!v.value.trim()){ v.classList.add('error-field'); err=true; }
+    if(!c.value.trim()){ c.classList.add('error-field'); err=true; }
+    if(!err) openStep(3);
+};
+
+// --- LANCEMENT (DRAG DOWN) ---
 const starImg = document.getElementById('star-to-launch');
-let startY = 0;
-let isPulling = false;
-
-function startPull(e) { startY = e.touches ? e.touches[0].clientY : e.clientY; isPulling = true; starImg.style.transition = "none"; }
-function movePull(e) {
-    if(!isPulling) return;
-    const currentY = e.touches ? e.touches[0].clientY : e.clientY;
-    let diff = currentY - startY;
+let sY = 0; let pulling = false;
+starImg.onmousedown = (e) => { sY = e.clientY; pulling = true; starImg.style.transition = "none"; };
+window.onmousemove = (e) => {
+    if(!pulling) return;
+    const diff = e.clientY - sY;
     if(diff > 0) {
         starImg.style.transform = `translateY(${diff}px)`;
-        if(diff > 140) { launchStar(); isPulling = false; }
+        if(diff > 120) { launchStar(); pulling = false; }
     }
-}
-
-starImg.onmousedown = startPull; window.onmousemove = movePull;
-starImg.ontouchstart = startPull; window.ontouchmove = movePull;
-window.onmouseup = window.ontouchend = () => { isPulling = false; starImg.style.transition = "0.3s"; starImg.style.transform = "translateY(0)"; };
+};
+window.onmouseup = () => { pulling = false; starImg.style.transition = "0.3s"; starImg.style.transform = "translateY(0)"; };
 
 async function launchStar() {
-    const data = {
-        nom: document.getElementById('star-name').value || "Someone",
-        voeu: document.getElementById('star-wish').value,
-        contact: `${document.getElementById('contact-type').value}: ${document.getElementById('user-contact').value}`,
-        image: canvas.toDataURL(),
-        date: Date.now()
-    };
-    await addDoc(wishesRef, data);
-    closeModal();
-    // Recharger doucement pour voir la nouvelle étoile
-    setTimeout(() => location.reload(), 800);
+    const n = document.getElementById('star-name').value.trim();
+    const v = document.getElementById('star-wish').value.trim();
+    const c = document.getElementById('user-contact').value.trim();
+    const ct = document.getElementById('contact-type').value;
+    
+    try {
+        await addDoc(wishesRef, { nom: n, voeu: v, contact: `${ct}: ${c}`, image: canvas.toDataURL(), date: Date.now() });
+        modal.className = 'modal-hidden';
+        confirmModal.className = 'view-show';
+    } catch(e) { alert("Error launching star!"); }
 }
 
-// --- 6. AFFICHAGE DE LA GALAXIE & POPUP DÉTAILS ---
+// --- RECHERCHE ---
+window.filtrerEtoiles = () => {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    document.querySelectorAll('.galaxy-star').forEach(s => {
+        const nom = s.getAttribute('data-nom').toLowerCase();
+        const contact = s.getAttribute('data-contact').toLowerCase();
+        const match = isQueen ? (nom.includes(q) || contact.includes(q)) : nom.includes(q);
+        s.classList.toggle('star-hidden', !match);
+    });
+};
+
+// --- SYNC FIREBASE ---
 onSnapshot(query(wishesRef, orderBy("date", "desc")), (snap) => {
-    sky.innerHTML = ""; 
-    createBg(); // Recrée les étoiles de fond
+    document.querySelectorAll('.galaxy-star').forEach(el => el.remove());
     snap.forEach(doc => {
         const d = doc.data();
         const s = document.createElement('div');
         s.className = 'galaxy-star';
-        s.style.left = Math.random() * 85 + "vw";
-        s.style.top = Math.random() * 75 + "vh";
-        
-        const img = document.createElement('img');
-        img.src = d.image;
-        
-        // Au clic : Ouvre la Popup (Photo 951a3bfd)
+        s.setAttribute('data-nom', d.nom); s.setAttribute('data-contact', d.contact || "");
+        s.style.left = Math.random() * 2800 + "px"; s.style.top = Math.random() * 2800 + "px";
+        const img = document.createElement('img'); img.src = d.image;
         img.onclick = () => {
             document.getElementById('view-img').src = d.image;
             document.getElementById('view-wish').innerText = d.voeu;
-            // Mode Queen secret
             document.getElementById('view-name').innerText = isQueen ? `${d.nom} (${d.contact})` : d.nom;
             document.getElementById('view-date').innerText = new Date(d.date).toLocaleDateString();
             viewModal.className = 'view-show';
         };
-        s.appendChild(img);
-        sky.appendChild(s);
+        s.appendChild(img); sky.appendChild(s);
     });
 });
