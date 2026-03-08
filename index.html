@@ -3,44 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wishing Star Galaxy</title>
+    <title>Wishing Star | Secret Galaxy</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="sky"></div>
+
+    <div id="sky-container">
+        <div id="sky"></div>
+    </div>
+
     <button id="open-btn" onclick="ouvrirMenu()">+</button>
+
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Search a star..." oninput="filtrerEtoiles()">
+    </div>
+
+    <div id="welcome-modal" class="view-modal-hidden">
+        <div class="view-content">
+            <button class="close-view" onclick="closeWelcome()">x</button>
+            <div style="font-size: 30px; margin-bottom: 15px;">✨</div>
+            <p>"Don't be afraid to dream; be proud that you're one of the rare people who can do it."</p>
+            <button class="next-btn" onclick="closeWelcome()">Enter the Galaxy</button>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="view-modal-hidden">
+        <div class="view-content">
+            <button class="close-view" onclick="closeConfirm()">x</button>
+            <div style="font-size: 30px; margin-bottom: 15px;">🌠</div>
+            <p>"If anything goes wrong with your wish, make another one. Dreams aren't absolutely made to come alive, but to keep us alive✨"</p>
+            <button class="next-btn" onclick="closeConfirm()">I will remember</button>
+        </div>
+    </div>
 
     <div id="wish-modal" class="modal-hidden">
         <div class="modal-content">
-            <button class="close-modal" onclick="closeModal()">×</button>
+            <button class="close-modal" onclick="closeModal()">x</button>
+            
             <div id="step-1" class="step">
-                <h2 class="title-step">Draw Your Star</h2>
-                <div class="drawing-area"><canvas id="drawCanvas" width="300" height="250"></canvas></div>
-                <div class="toolbar">
-                    <div class="colors">
-                        <div class="color-dot active" style="background:white" onclick="setColor('white', this)"></div>
-                        <div class="color-dot" style="background:#add8e6" onclick="setColor('#add8e6', this)"></div>
-                        <div class="color-dot" style="background:#ffb6c1" onclick="setColor('#ffb6c1', this)"></div>
+                <h2 style="margin-top:0;">Draw Your Star</h2>
+                <div class="drawing-area"><canvas id="drawCanvas" width="280" height="220"></canvas></div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="colors" style="display:flex; gap:8px;">
+                        <div class="color-dot active" style="background:#ffffff" onclick="setColor('#ffffff', this)"></div>
+                        <div class="color-dot" style="background:#80ffff" onclick="setColor('#80ffff', this)"></div>
+                        <div class="color-dot" style="background:#ff80ff" onclick="setColor('#ff80ff', this)"></div>
+                        <div class="color-dot" style="background:#ffeb3b" onclick="setColor('#ffeb3b', this)"></div>
                     </div>
-                    <button class="action-btn" onclick="clearCanvas()">Undo</button>
-                    <button class="next-btn" onclick="openStep(2)">Continue ></button>
+                    <button class="action-btn" onclick="clearCanvas()">Clear</button>
                 </div>
+                <button class="next-btn" onclick="openStep(2)" style="width:100%;">Continue ></button>
             </div>
+
             <div id="step-2" class="step" style="display:none;">
-                <h2 class="title-step">Details</h2>
-                <input type="text" id="star-name" placeholder="Nickname">
-                <div class="contact-row">
-                    <select id="contact-type"><option value="Insta">Insta</option><option value="TikTok">TikTok</option></select>
-                    <input type="text" id="user-contact" placeholder="@account">
+                <h2>Details</h2>
+                <div class="scroll-container">
+                    <input type="text" id="star-name" placeholder="Nickname">
+                    <div class="contact-row">
+                        <select id="contact-type" style="width:40%;"><option value="Insta">Insta</option><option value="TikTok">TikTok</option></select>
+                        <input type="text" id="user-contact" placeholder="@account">
+                    </div>
+                    <textarea id="star-wish" rows="4" placeholder="Your wish..."></textarea>
                 </div>
-                <textarea id="star-wish" placeholder="Your wish..."></textarea>
-                <button class="next-btn" onclick="openStep(3)">Next ></button>
+                <button class="next-btn" onclick="validerEtape2()" style="width:100%;">Next ></button>
             </div>
+
             <div id="step-3" class="step" style="display:none;">
-                <h2 class="title-step">Launch</h2>
+                <h2>Launch</h2>
+                <p style="font-size:0.8rem; opacity:0.7;">Pull the star down to send it!</p>
                 <div id="launch-zone">
                     <img id="star-to-launch" src="" class="star-preview">
-                    <div class="mouse-icon"></div>
                 </div>
             </div>
         </div>
@@ -48,12 +80,14 @@
 
     <div id="view-modal" class="view-modal-hidden">
         <div class="view-content">
-            <button class="close-view" onclick="closeView()">×</button>
-            <img id="view-img" src="">
-            <p id="view-wish"></p>
-            <div class="view-footer">
-                <span id="view-name"></span>
-                <span id="view-date"></span>
+            <button class="close-view" onclick="closeView()">x</button>
+            <div class="scroll-container">
+                <img id="view-img" src="" style="width:100%; border-radius:15px; margin-top:10px;">
+                <p id="view-wish" style="margin-top:15px; font-size:1rem; line-height:1.5;"></p>
+                <div style="margin-top:15px;">
+                    <span id="view-name" style="font-weight:bold; color:#add8e6;"></span><br>
+                    <span id="view-date" style="opacity:0.6; font-size:0.8rem;"></span>
+                </div>
             </div>
         </div>
     </div>
