@@ -7,16 +7,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div id="sky-container">
-        <div id="sky"></div>
-    </div>
-
+    <div id="sky-container"><div id="sky"></div></div>
     <button id="open-btn" onclick="ouvrirMenu()">+</button>
-
-    <div id="search-container">
-        <input type="text" id="search-input" placeholder="Search a star..." oninput="filtrerEtoiles()">
-    </div>
+    <div id="search-container"><input type="text" id="search-input" placeholder="Search a star..." oninput="filtrerEtoiles()"></div>
 
     <div id="welcome-modal" class="view-modal-hidden">
         <div class="view-content">
@@ -31,7 +24,7 @@
         <div class="view-content">
             <button class="close-view" onclick="closeConfirm()">x</button>
             <div style="font-size: 30px; margin-bottom: 15px;">🌠</div>
-            <p>"If anything goes wrong with your wish, make another one. Dreams aren't absolutely made to come alive, but to keep us alive✨"</p>
+            <p>"If anything goes wrong with your wish, make another one. Dreams aren't absolutely made to keep us alive✨"</p>
             <button class="next-btn" onclick="closeConfirm()">I will remember</button>
         </div>
     </div>
@@ -39,7 +32,6 @@
     <div id="wish-modal" class="modal-hidden">
         <div class="modal-content">
             <button class="close-modal" onclick="closeModal()">x</button>
-            
             <div id="step-1" class="step">
                 <h2 style="margin-top:0;">Draw Your Star</h2>
                 <div class="drawing-area"><canvas id="drawCanvas" width="280" height="220"></canvas></div>
@@ -54,7 +46,6 @@
                 </div>
                 <button class="next-btn" onclick="openStep(2)" style="width:100%;">Continue ></button>
             </div>
-
             <div id="step-2" class="step" style="display:none;">
                 <h2>Details</h2>
                 <div class="scroll-container">
@@ -67,7 +58,6 @@
                 </div>
                 <button class="next-btn" onclick="validerEtape2()" style="width:100%;">Next ></button>
             </div>
-
             <div id="step-3" class="step" style="display:none;">
                 <h2>Launch</h2>
                 <p style="font-size:0.8rem; opacity:0.7;">Pull the star down to send it!</p>
