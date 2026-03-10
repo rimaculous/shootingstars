@@ -1,40 +1,178 @@
-body { margin:0; background:#000; color:white; font-family:'Courier New', monospace; overflow: auto; user-select: none; }
-#sky-container { width: 3000px; height: 3000px; position: relative; }
-#sky { width: 100%; height: 100%; position: absolute; background: radial-gradient(circle at center, #1b2735 0%, #000 100%); z-index: 1; pointer-events: none; }
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-.twinkle-star { position: absolute; width: 2px; height: 2px; background: white; border-radius: 50%; box-shadow: 0 0 5px white; animation: twinkle 4s infinite ease-in-out; z-index: 2; }
-@keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.2); } }
+const firebaseConfig = {
+    apiKey: "AIzaSyC_Kyp7DEOpABxH77R3sS7gcekYe21tZpQ",
+    authDomain: "wishglow-6687b.firebaseapp.com",
+    projectId: "wishglow-6687b",
+    storageBucket: "wishglow-6687b.firebasestorage.app",
+    messagingSenderId: "512146739720",
+    appId: "1:512146739720:web:5712be2a00d5f5eb0977bd"
+};
 
-#open-btn { position:fixed; top:20px; left:20px; width:45px; height:45px; border-radius:50%; border:1px solid white; background:rgba(0,0,0,0.5); color:white; font-size:22px; z-index:2000; cursor: pointer; }
-#search-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; width: 180px; }
-#search-input { width: 100%; padding: 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.8); color: white; font-size: 0.9rem; outline: none; }
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const wishesRef = collection(db, "wishes");
+const isQueen = new URLSearchParams(window.location.search).get('mode') === 'queen';
 
-.modal-hidden, .view-modal-hidden { display:none; }
-.modal-show, .view-show { display:flex !important; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:3000; }
-.modal-content, .view-content { background:#1b2735; padding:25px; border-radius:20px; width: 80%; max-width: 320px; max-height: 85vh; text-align:center; border: 1px solid rgba(255,255,255,0.1); position:relative; backdrop-filter: blur(15px); display: flex; flex-direction: column; }
+// --- SKY ---
+const sky = document.getElementById("sky");
+for (let i = 0; i < 1200; i++) {
+    const s = document.createElement('div');
+    s.className = 'twinkle-star';
+    s.style.left = Math.random() * 3000 + "px";
+    s.style.top = Math.random() * 3000 + "px";
+    s.style.animationDelay = Math.random() * 5 + "s";
+    sky.appendChild(s);
+}
+window.scrollTo(1500 - window.innerWidth/2, 1500 - window.innerHeight/2);
 
-.scroll-container { overflow-y: auto; padding-right: 5px; margin-top: 10px; }
-.scroll-container::-webkit-scrollbar { width: 4px; }
-.scroll-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+// --- MODALS ---
+const modal = document.getElementById('wish-modal');
+const viewModal = document.getElementById('view-modal');
+const welcomeModal = document.getElementById('welcome-modal');
+const confirmModal = document.getElementById('confirm-modal');
+const canvas = document.getElementById("drawCanvas");
+const ctx = canvas.getContext("2d");
+let drawing = false; let currentColor = '#ffffff';
 
-.close-modal, .close-view { position: absolute; top: 12px; left: 12px; background: none; border: none; color: white; font-size: 22px; cursor: pointer; z-index: 10; }
+window.ouvrirMenu = () => modal.className = 'modal-show';
+window.closeModal = () => { modal.className = 'modal-hidden'; openStep(1); clearCanvas(); };
+window.closeView = () => viewModal.className = 'view-modal-hidden';
+window.closeWelcome = () => welcomeModal.className = 'view-modal-hidden';
+window.closeConfirm = () => { confirmModal.className = 'view-modal-hidden'; location.reload(); };
 
-.drawing-area { background:#090a0f; border-radius:15px; margin:10px 0; height:220px; touch-action: none; border: 1px dashed rgba(255,255,255,0.2); }
-.galaxy-star { position: absolute; cursor: pointer; z-index: 1000; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s, transform 0.3s; }
-.star-hidden { opacity: 0; pointer-events: none; transform: scale(0); }
-.galaxy-star img { width: 100%; filter: drop-shadow(0 0 5px white); pointer-events: auto; }
+window.onload = () => { setTimeout(() => { welcomeModal.className = 'view-show'; }, 600); };
 
-.color-dot { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
-.color-dot.active { transform: scale(1.2); border-color: white; }
+window.openStep = (n) => {
+    document.querySelectorAll('.step').forEach((s, i) => s.style.display = (i+1 === n) ? 'block' : 'none');
+    if(n === 3) {
+        document.getElementById('star-to-launch').src = canvas.toDataURL();
+        setupLaunch(); // On réinitialise les écouteurs au moment où l'étape 3 s'affiche
+    }
+};
 
-input, textarea, select { width: 90%; margin: 6px 0; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; font-size: 0.9rem; outline: none; }
-.contact-row { display: flex; gap: 5px; width: 95%; margin: 0 auto; }
+// --- DESSIN ---
+function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+    return { x: cx - r.left, y: cy - r.top };
+}
 
-button.next-btn { background: white; color: #1b2735; font-weight: bold; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; margin-top: 10px; }
-button.action-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 15px; cursor: pointer; }
+canvas.addEventListener('mousedown', (e) => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); });
+canvas.addEventListener('mousemove', (e) => {
+    if (!drawing) return; e.preventDefault();
+    const p = getPos(e);
+    ctx.strokeStyle = currentColor; ctx.lineWidth = 3; ctx.lineCap = "round";
+    ctx.shadowBlur = 3; ctx.shadowColor = currentColor;
+    ctx.lineTo(p.x, p.y); ctx.stroke();
+});
+window.addEventListener('mouseup', () => { drawing = false; ctx.shadowBlur = 0; });
 
-#launch-zone { height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: visible; }
-.star-preview { width: 70px; filter: drop-shadow(0 0 10px white); cursor: grab; position: relative; z-index: 5000; touch-action: none; }
+canvas.addEventListener('touchstart', (e) => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); });
+canvas.addEventListener('touchmove', (e) => { if(!drawing) return; e.preventDefault(); const p = getPos(e); ctx.strokeStyle = currentColor; ctx.lineWidth = 3; ctx.shadowBlur = 3; ctx.shadowColor = currentColor; ctx.lineTo(p.x, p.y); ctx.stroke(); });
+canvas.addEventListener('touchend', () => { drawing = false; });
 
-.error-field { border: 1px solid #ff4d4d !important; background: rgba(255, 77, 77, 0.1) !important; animation: shake 0.3s; }
-@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+window.setColor = (c, el) => { currentColor = c; document.querySelector('.color-dot.active').classList.remove('active'); el.classList.add('active'); };
+window.clearCanvas = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// --- VALIDATION ---
+window.validerEtape2 = () => {
+    const n = document.getElementById('star-name');
+    const v = document.getElementById('star-wish');
+    const c = document.getElementById('user-contact');
+    let err = false;
+    [n,v,c].forEach(el => el.classList.remove('error-field'));
+    if(!n.value.trim()){ n.classList.add('error-field'); err=true; }
+    if(!v.value.trim()){ v.classList.add('error-field'); err=true; }
+    if(!c.value.trim()){ c.classList.add('error-field'); err=true; }
+    if(!err) openStep(3);
+};
+
+// --- LE LANCER (VERSION ROBUSTE) ---
+function setupLaunch() {
+    const starImg = document.getElementById('star-to-launch');
+    let startY = 0;
+    let pulling = false;
+
+    const onStart = (e) => {
+        pulling = true;
+        startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        starImg.style.transition = "none";
+    };
+
+    const onMove = (e) => {
+        if (!pulling) return;
+        const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        const diff = currentY - startY;
+        if (diff > 0) {
+            e.preventDefault();
+            starImg.style.transform = `translateY(${diff}px)`;
+            if (diff > 120) {
+                pulling = false;
+                launchStar();
+            }
+        }
+    };
+
+    const onEnd = () => {
+        if (!pulling) return;
+        pulling = false;
+        starImg.style.transition = "0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+        starImg.style.transform = "translateY(0)";
+    };
+
+    // Nettoyage des anciens écouteurs pour éviter les doublons
+    starImg.onmousedown = onStart;
+    window.onmousemove = onMove;
+    window.onmouseup = onEnd;
+
+    starImg.ontouchstart = onStart;
+    window.ontouchmove = onMove;
+    window.ontouchend = onEnd;
+}
+
+async function launchStar() {
+    const n = document.getElementById('star-name').value.trim();
+    const v = document.getElementById('star-wish').value.trim();
+    const c = document.getElementById('user-contact').value.trim();
+    const ct = document.getElementById('contact-type').value;
+    try {
+        await addDoc(wishesRef, { nom: n, voeu: v, contact: `${ct}: ${c}`, image: canvas.toDataURL(), date: Date.now() });
+        modal.className = 'modal-hidden';
+        confirmModal.className = 'view-show';
+    } catch(e) { alert("Error launching star!"); }
+}
+
+// --- RECHERCHE ---
+window.filtrerEtoiles = () => {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    document.querySelectorAll('.galaxy-star').forEach(s => {
+        const nom = s.getAttribute('data-nom').toLowerCase();
+        const contact = s.getAttribute('data-contact').toLowerCase();
+        const match = isQueen ? (nom.includes(q) || contact.includes(q)) : nom.includes(q);
+        s.classList.toggle('star-hidden', !match);
+    });
+};
+
+// --- SYNC ---
+onSnapshot(query(wishesRef, orderBy("date", "desc")), (snap) => {
+    document.querySelectorAll('.galaxy-star').forEach(el => el.remove());
+    snap.forEach(doc => {
+        const d = doc.data();
+        const s = document.createElement('div');
+        s.className = 'galaxy-star';
+        s.setAttribute('data-nom', d.nom); s.setAttribute('data-contact', d.contact || "");
+        s.style.left = Math.random() * 2800 + "px"; s.style.top = Math.random() * 2800 + "px";
+        const img = document.createElement('img'); img.src = d.image;
+        img.onclick = () => {
+            document.getElementById('view-img').src = d.image;
+            document.getElementById('view-wish').innerText = d.voeu;
+            document.getElementById('view-name').innerText = isQueen ? `${d.nom} (${d.contact})` : d.nom;
+            document.getElementById('view-date').innerText = new Date(d.date).toLocaleDateString();
+            viewModal.className = 'view-show';
+        };
+        s.appendChild(img); sky.appendChild(s);
+    });
+});
